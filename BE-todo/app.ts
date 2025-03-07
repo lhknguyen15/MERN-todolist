@@ -8,16 +8,19 @@ import todoRoutes from "./routes/todoRoutes";
 dotenv.config();
 
 const app = express();
+
+app.use(express.json());
+app.use(cookiParser());
+app.use("/api/auth", authRoutes);
+app.use("/api/todos", todoRoutes);
+
 const mongooseURL = `mongodb+srv://${process.env.DATABASE_USERNAME}:${process.env.DATABASE_PASSWORD}@cluster0.jccpq.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 mongoose
   .connect(mongooseURL)
   .then(() => console.log("Connected to MongoDB"))
   .catch((err) => console.error("MongoDB connection error: ", err));
 
-app.use(express.json());
-app.use(cookiParser());
-app.use("/api/auth", authRoutes());
-app.use("/api/todos", todoRoutes);
+
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server is running on port ${PORT}`));
