@@ -5,7 +5,7 @@ const SignUpPage = () => {
   return (
     <div className="max-w-sm w-full space-y-8">
       <h2 className="mt-6 text-center text-3xl font-extrabold text-green-600">
-        Đăng Ký
+        Đăng ký
       </h2>
       <form className="mt-8 space-y-6">
         <div>
@@ -31,7 +31,7 @@ const SignUpPage = () => {
             htmlFor="password"
             className="block text-sm font-medium text-gray-700"
           >
-            Password
+            Mật khẩu
             <input className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none " />
           </label>
         </div>
