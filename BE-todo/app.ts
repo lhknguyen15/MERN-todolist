@@ -15,7 +15,7 @@ app.use(cookiParser());
 app.use("/api/auth", authRoutes);
 app.use("/api/todos", todoRoutes);
 
-const mongooseURL = `mongodb+srv://${process.env.DATABASE_USERNAME}:${process.env.DATABASE_PASSWORD}@cluster0.jccpq.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
+const mongooseURL = `mongodb+srv://${process.env.DATABASE_USERNAME}:${process.env.DATABASE_PASSWORD}@cluster0.jccpq.mongodb.net/MERN_todos?retryWrites=true&w=majority&appName=Cluster0`;
 mongoose
   .connect(mongooseURL)
   .then(() => console.log("Connected to MongoDB"))

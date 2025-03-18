@@ -1,25 +1,31 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 import { useDispatch, useSelector } from "react-redux";
+import { Link, useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 import { loginUser } from "../redux/slices/authSlice";
-import { RootState, AppDispatch } from "../redux/store";
-
+import { AppDispatch, RootState } from "../redux/store";
 const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const dispatch = useDispatch<AppDispatch>();
-  const { loading, error } = useSelector((state: RootState) => state.auth);
+  const { loading } = useSelector((state: RootState) => state.auth);
   const navigate = useNavigate();
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    dispatch(loginUser({ email, password })).then((result) => {
-      if (loginUser.fulfilled.match(result)) {
-        navigate("/home");
-      }
-    });
+    dispatch(loginUser({ email, password }))
+      .unwrap()
+      .then((response) => {
+        console.log(response.data);
+
+        navigate("/home"); // chuyển hướng sau khi đăng nhập thành công
+        toast.success("Đăng nhập thành công!");
+      })
+      .catch((error) => {
+        toast.error(error);
+      });
   };
 
   return (
@@ -27,7 +33,6 @@ const LoginPage = () => {
       <h2 className="mt-6 text-center text-3xl font-extrabold text-green-600">
         Đăng nhập
       </h2>
-      {error && <p className="text-red-500 text-sm text-center">{error}</p>}
       <form className="mt-8 space-y-6" onSubmit={handleLogin}>
         <div>
           <label className="block text-sm font-medium text-gray-700">
@@ -37,8 +42,8 @@ const LoginPage = () => {
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            required
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
+            placeholder="Nhập email"
+            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"
           />
         </div>
         <div>
@@ -50,8 +55,8 @@ const LoginPage = () => {
               type={showPassword ? "text" : "password"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              required
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
+              placeholder="Nhập mật khẩu"
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"
             />
             <button
               type="button"

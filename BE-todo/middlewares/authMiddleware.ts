@@ -1,22 +1,20 @@
-import { Request, Response, NextFunction } from "express";
+import { RequestHandler } from "express";
 import jwt from "jsonwebtoken";
-import dotenv from "dotenv";
 
-dotenv.config();
-const JWT_SECRET = `process.env.JWT_SECRET`;
-
-export const authenticateToken = (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  const authHeader = req.headers["authorization"];
+export const authenticateToken: RequestHandler = (req, res, next) => {
+  const authHeader = req.headers.authorization;
   const token = authHeader && authHeader.split(" ")[1];
-  if (!token) return (res as any).sendStatus(401);
+  if (!token) {
+    res.status(401).json({ message: "Unauthorized" });
+    return; // kết thúc hàm, không return response
+  }
 
-  jwt.verify(token, JWT_SECRET, (err, user) => {
-    if (err) return res.sendStatus(403);
-    (req as any).user = user;
+  jwt.verify(token, process.env.JWT_SECRET!, (err, decoded) => {
+    if (err) {
+      console.log(err); 
+      return res.status(403).json({ message: "Forbidden" });
+    }
+    (req as any).user = decoded;
     next();
   });
 };

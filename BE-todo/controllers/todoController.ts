@@ -3,7 +3,7 @@ import Todo from "../models/Todo";
 
 export const createTodo = async (req: Request, res: Response) => {
   const { title } = req.body;
-  const userId = (res as any).user.id;
+  const userId = (req as any).user.id;
   try {
     const todo = new Todo({ userId, title });
     await todo.save();
@@ -22,3 +22,5 @@ export const getTodos = async (req: Request, res: Response) => {
     res.status(500).json({ error: "Server error" });
   }
 };
+
+

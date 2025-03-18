@@ -6,8 +6,8 @@ import User from "../models/User";
 
 dotenv.config();
 
-const JWT_SECRET = `process.env.JWT_SECRET`;
-const JWT_REFRESH_SECRET = `process.env.JWT_REFRESH_SECRET`;
+const JWT_SECRET = process.env.JWT_SECRET!;
+const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET!;
 
 export const signUp = async (req: Request, res: Response) => {
   const { username, email, password } = req.body;
@@ -61,7 +61,7 @@ export const refreshToken = async (
     return res.status(401).json({ error: "Không có token nào được cung cấp" });
   try {
     const payload = jwt.verify(token, JWT_REFRESH_SECRET) as any;
-    const accessToken = jwt.sign({ id: payload._id }, JWT_SECRET, {
+    const accessToken = jwt.sign({ id: payload.id }, JWT_SECRET, {
       expiresIn: "15m",
     });
     res.json({ accessToken });
