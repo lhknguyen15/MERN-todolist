@@ -43,7 +43,7 @@ const NavBar = () => {
               className="absolute right-0 mt-2 w-24 bg-white text-black text-sm py-1 px-2 rounded-md shadow-md hover:bg-gray-200"
               onClick={handleLogout}
             >
-              Logout
+              Đăng xuất
             </button>
           )}
         </div>

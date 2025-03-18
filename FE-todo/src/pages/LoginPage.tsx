@@ -64,9 +64,9 @@ const LoginPage = () => {
               className="absolute inset-y-0 right-0 pr-3 flex items-center"
             >
               {showPassword ? (
-                <AiOutlineEyeInvisible className="text-black" size={20} />
+                <AiOutlineEyeInvisible className="text-gray-400" size={20} />
               ) : (
-                <AiOutlineEye className="text-black" size={20} />
+                <AiOutlineEye className="text-gray-400" size={20} />
               )}
             </button>
           </div>

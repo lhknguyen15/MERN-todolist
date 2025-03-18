@@ -1,13 +1,18 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { signUpUser } from "../redux/slices/authSlice";
+import { AppDispatch } from "../redux/store";
 
 const SignUpPage = () => {
-  const [fullName, setFullName] = useState("");
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const dispatch = useDispatch<AppDispatch>();
+  const navigate = useNavigate();
 
   const validateEmail = (email: string) => {
     // Regex đơn giản để kiểm tra email
@@ -16,20 +21,20 @@ const SignUpPage = () => {
   };
 
   // Validate fullName không chứa số (sử dụng regex hoặc kiểm tra đơn giản)
-  const validateFullName = (name: string) => {
+  const validateUsername = (name: string) => {
     // Nếu tên chứa số, trả về false
     return !/\d/.test(name);
   };
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSignup = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
+   
     // Validate họ tên
-    if (!fullName.trim()) {
+    if (!username.trim()) {
       toast.error("Họ tên không được để trống!");
       return;
     }
-    if (!validateFullName(fullName)) {
+    if (!validateUsername(username)) {
       toast.error("Họ tên không được chứa số!");
       return;
     }
@@ -59,13 +64,16 @@ const SignUpPage = () => {
       toast.error("Mật khẩu và xác nhận mật khẩu không khớp!");
       return;
     }
-
-    // Nếu mọi validate đều thành công
-    toast.success("Đăng ký thành công!");
-    console.log("Họ tên:", fullName);
-    console.log("Email:", email);
-    console.log("Mật khẩu:", password);
-    // Ở đây bạn có thể gọi API đăng ký, sau đó xử lý tiếp
+    dispatch(signUpUser({ username, email, password }))
+      .unwrap()
+      .then(() => {
+        navigate("/home");
+        toast.success("Đăng ký thành công");
+      })
+      .catch((err) => {
+        toast.error(err);
+        console.log(err);
+      });
   };
 
   return (
@@ -73,10 +81,10 @@ const SignUpPage = () => {
       <h2 className="mt-6 text-center text-3xl font-extrabold text-green-600">
         Đăng ký
       </h2>
-      <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+      <form className="mt-8 space-y-6" onSubmit={handleSignup}>
         <div>
           <label
-            htmlFor="fullName"
+            htmlFor="username"
             className="block text-sm font-medium text-gray-700"
           >
             Họ và tên
@@ -84,8 +92,8 @@ const SignUpPage = () => {
           <input
             id="fullName"
             type="text"
-            value={fullName}
-            onChange={(e) => setFullName(e.target.value)}
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
             placeholder="Nhập họ và tên"
             className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none"
           />

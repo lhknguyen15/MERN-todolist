@@ -21,7 +21,7 @@ const Routers = () => {
           </Route>
         </Routes>
       </BrowserRouter>
-      <ToastContainer position="top-center" autoClose={5000} />
+      <ToastContainer position="top-center" autoClose={3000} />
     </>
   );
 };

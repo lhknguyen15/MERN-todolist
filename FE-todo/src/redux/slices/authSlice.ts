@@ -22,7 +22,34 @@ const initialState: AuthState = {
   error: null,
 };
 
-// Async action: Gửi request đăng nhập
+// **Async action: Gửi request đăng ký**
+export const signUpUser = createAsyncThunk(
+  "auth/signUpUser",
+  async (
+    userData: { username: string; email: string; password: string },
+    { rejectWithValue }
+  ) => {
+    try {
+      const response = await axios.post(
+        `http://localhost:3001/api/auth/register`,
+        userData
+      );
+
+      // Lưu accessToken vào localStorage sau khi đăng ký thành công
+      localStorage.setItem("accessToken", response.data.accessToken);
+
+      return response.data;
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        return rejectWithValue(
+          error.response?.data?.message || "Đăng ký thất bại!"
+        );
+      }
+      return rejectWithValue("Đã xảy ra lỗi!");
+    }
+  }
+);
+// **Async action: Gửi request đăng nhập**
 export const loginUser = createAsyncThunk(
   "auth/loginUser",
   async (
@@ -39,7 +66,7 @@ export const loginUser = createAsyncThunk(
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
         return rejectWithValue(
-         error.response?.data?.message || "Đăng nhập thất bại!"
+          error.response?.data?.message || "Đăng nhập thất bại!"
         );
       }
       return rejectWithValue("Đã xảy ra lỗi!");
@@ -59,6 +86,22 @@ const authSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      // Xử lý đăng ký
+      .addCase(signUpUser.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(signUpUser.fulfilled, (state, action) => {
+        state.loading = false;
+        state.user = action.payload.user;
+        state.token = action.payload.accessToken;
+      })
+      .addCase(signUpUser.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+
+      // Xử lý đăng nhập
       .addCase(loginUser.pending, (state) => {
         state.loading = true;
         state.error = null;
