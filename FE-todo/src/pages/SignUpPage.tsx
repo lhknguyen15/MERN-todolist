@@ -28,7 +28,7 @@ const SignUpPage = () => {
 
   const handleSignup = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-   
+
     // Validate họ tên
     if (!username.trim()) {
       toast.error("Họ tên không được để trống!");
@@ -66,7 +66,8 @@ const SignUpPage = () => {
     }
     dispatch(signUpUser({ username, email, password }))
       .unwrap()
-      .then(() => {
+      .then((response) => {
+        console.log(response.data);
         navigate("/home");
         toast.success("Đăng ký thành công");
       })

@@ -1,7 +1,7 @@
 import express from "express";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
-import cookiParser from "cookie-parser";
+import cookieParser from "cookie-parser";
 import authRoutes from "./routes/authRoutes";
 import todoRoutes from "./routes/todoRoutes";
 import cors from "cors";
@@ -9,9 +9,14 @@ import cors from "cors";
 dotenv.config();
 
 const app = express();
-app.use(cors());
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+    credentials: true,
+  })
+);
 app.use(express.json());
-app.use(cookiParser());
+app.use(cookieParser());
 app.use("/api/auth", authRoutes);
 app.use("/api/todos", todoRoutes);
 

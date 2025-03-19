@@ -15,7 +15,26 @@ export const signUp = async (req: Request, res: Response) => {
     const hashedPassword = await bcrypt.hash(password, 10);
     const newUser = new User({ username, email, password: hashedPassword });
     await newUser.save();
-    res.status(201).json({ message: "Tạo tài khoản thành công" });
+
+    const accessToken = jwt.sign({ id: newUser._id }, JWT_SECRET, {
+      expiresIn: "15m",
+    });
+    const refreshToken = jwt.sign({ id: newUser._id }, JWT_REFRESH_SECRET, {
+      expiresIn: "7d",
+    });
+
+    // 4. Lưu refreshToken vào cookie (nếu muốn)
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+    });
+
+    // 5. Trả về accessToken (và message)
+    res.status(201).json({
+      message: "Tạo tài khoản thành công",
+      accessToken,
+    });
   } catch (error) {
     res.status(500).json({ error: "Server error" });
   }
@@ -35,7 +54,7 @@ export const signIn = async (req: Request, res: Response): Promise<any> => {
         .status(400)
         .json({ error: "Thông tin đăng nhập không hợp lệ" });
     const accessToken = jwt.sign({ id: user._id }, JWT_SECRET, {
-      expiresIn: "15m",
+      expiresIn: "30s",
     });
     const refreshToken = jwt.sign({ id: user._id }, JWT_REFRESH_SECRET, {
       expiresIn: "7d",

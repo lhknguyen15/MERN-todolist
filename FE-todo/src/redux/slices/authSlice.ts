@@ -1,9 +1,10 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import axiosClient from "../../apis/axiosClient";
 import axios from "axios";
 
 interface User {
   id: string;
-  name: string;
+  username: string;
   email: string;
 }
 
@@ -14,7 +15,6 @@ interface AuthState {
   error: string | null;
 }
 
-// Trạng thái ban đầu
 const initialState: AuthState = {
   user: null,
   token: localStorage.getItem("accessToken") || null,
@@ -30,16 +30,10 @@ export const signUpUser = createAsyncThunk(
     { rejectWithValue }
   ) => {
     try {
-      const response = await axios.post(
-        `http://localhost:3001/api/auth/register`,
-        userData
-      );
-
-      // Lưu accessToken vào localStorage sau khi đăng ký thành công
+      const response = await axiosClient.post("/auth/register", userData);
       localStorage.setItem("accessToken", response.data.accessToken);
-
       return response.data;
-    } catch (error: unknown) {
+    } catch (error) {
       if (axios.isAxiosError(error)) {
         return rejectWithValue(
           error.response?.data?.message || "Đăng ký thất bại!"
@@ -49,6 +43,7 @@ export const signUpUser = createAsyncThunk(
     }
   }
 );
+
 // **Async action: Gửi request đăng nhập**
 export const loginUser = createAsyncThunk(
   "auth/loginUser",
@@ -57,19 +52,42 @@ export const loginUser = createAsyncThunk(
     { rejectWithValue }
   ) => {
     try {
-      const response = await axios.post(
-        `http://localhost:3001/api/auth/login`,
-        userData
-      );
+      const response = await axiosClient.post("/auth/login", userData);
       localStorage.setItem("accessToken", response.data.accessToken);
       return response.data;
-    } catch (error: unknown) {
+    } catch (error) {
       if (axios.isAxiosError(error)) {
         return rejectWithValue(
           error.response?.data?.message || "Đăng nhập thất bại!"
         );
       }
       return rejectWithValue("Đã xảy ra lỗi!");
+    }
+  }
+);
+
+// **Async action: Refresh Access Token**
+export const refreshAccessToken = createAsyncThunk(
+  "auth/refreshAccessToken",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await axiosClient.post(
+        "/auth/refresh-token",
+        {},
+        { withCredentials: true } // Gửi cookie refreshToken
+      );
+      if (response.data?.accessToken) {
+        localStorage.setItem("accessToken", response.data.accessToken);
+        return response.data.accessToken;
+      }
+      return rejectWithValue("Không nhận được access token mới");
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        return rejectWithValue(
+          error.response?.data?.message || "Lỗi khi refresh token!"
+        );
+      }
+      return rejectWithValue("Đã xảy ra lỗi khi refresh token!");
     }
   }
 );
@@ -86,6 +104,20 @@ const authSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      // Xử lý đăng nhập
+      .addCase(loginUser.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(loginUser.fulfilled, (state, action) => {
+        state.loading = false;
+        state.user = action.payload.user;
+        state.token = action.payload.accessToken;
+      })
+      .addCase(loginUser.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
       // Xử lý đăng ký
       .addCase(signUpUser.pending, (state) => {
         state.loading = true;
@@ -100,19 +132,11 @@ const authSlice = createSlice({
         state.loading = false;
         state.error = action.payload as string;
       })
-
-      // Xử lý đăng nhập
-      .addCase(loginUser.pending, (state) => {
-        state.loading = true;
-        state.error = null;
+      // Xử lý refresh token
+      .addCase(refreshAccessToken.fulfilled, (state, action) => {
+        state.token = action.payload;
       })
-      .addCase(loginUser.fulfilled, (state, action) => {
-        state.loading = false;
-        state.user = action.payload.user;
-        state.token = action.payload.accessToken;
-      })
-      .addCase(loginUser.rejected, (state, action) => {
-        state.loading = false;
+      .addCase(refreshAccessToken.rejected, (state, action) => {
         state.error = action.payload as string;
       });
   },
