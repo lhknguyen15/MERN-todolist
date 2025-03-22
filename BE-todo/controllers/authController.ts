@@ -7,7 +7,6 @@ import User from "../models/User";
 dotenv.config();
 
 const JWT_SECRET = process.env.JWT_SECRET!;
-const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET!;
 
 export const signUp = async (req: Request, res: Response) => {
   const { username, email, password } = req.body;
@@ -19,18 +18,7 @@ export const signUp = async (req: Request, res: Response) => {
     const accessToken = jwt.sign({ id: newUser._id }, JWT_SECRET, {
       expiresIn: "15m",
     });
-    const refreshToken = jwt.sign({ id: newUser._id }, JWT_REFRESH_SECRET, {
-      expiresIn: "7d",
-    });
 
-    // 4. Lưu refreshToken vào cookie (nếu muốn)
-    res.cookie("refreshToken", refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-    });
-
-    // 5. Trả về accessToken (và message)
     res.status(201).json({
       message: "Tạo tài khoản thành công",
       accessToken,
@@ -48,43 +36,23 @@ export const signIn = async (req: Request, res: Response): Promise<any> => {
       return res
         .status(400)
         .json({ error: "Thông tin đăng nhập không hợp lệ" });
+
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch)
       return res
         .status(400)
         .json({ error: "Thông tin đăng nhập không hợp lệ" });
+
     const accessToken = jwt.sign({ id: user._id }, JWT_SECRET, {
-      expiresIn: "30s",
-    });
-    const refreshToken = jwt.sign({ id: user._id }, JWT_REFRESH_SECRET, {
-      expiresIn: "7d",
+      expiresIn: "15s",
     });
 
-    res.cookie("refreshToken", refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-    });
     res.json({ accessToken });
   } catch (error) {
     res.status(500).json({ error: "Server error" });
   }
 };
 
-export const refreshToken = async (
-  req: Request,
-  res: Response
-): Promise<any> => {
-  const token = req.cookies.refreshToken;
-  if (!token)
-    return res.status(401).json({ error: "Không có token nào được cung cấp" });
-  try {
-    const payload = jwt.verify(token, JWT_REFRESH_SECRET) as any;
-    const accessToken = jwt.sign({ id: payload.id }, JWT_SECRET, {
-      expiresIn: "15m",
-    });
-    res.json({ accessToken });
-  } catch (error) {
-    res.status(401).json({ error: "Refresh token không hợp lệ" });
-  }
+export const logoutUser = (req: Request, res: Response) => {
+  res.status(200).json({ message: "Đã đăng xuất" });
 };

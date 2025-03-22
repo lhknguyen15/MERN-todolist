@@ -1,58 +1,53 @@
-// src/components/TodoList.tsx
-import React, { useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useEffect, useState } from "react";
+import axiosClient from "../../apis/axiosClient";
 
-import TodoCard from "./TodoCard";
-import { useNavigate } from "react-router-dom";
-import { FiPlus } from "react-icons/fi";
-import { fetchTodos, deleteTodo } from "../../redux/slices/todoSlice";
-import { AppDispatch, RootState } from "../../redux/store";
+interface Todo {
+  _id: string;
+  title: string;
+  completed: boolean;
+}
 
-const TodoList: React.FC = () => {
-  const dispatch = useDispatch<AppDispatch>();
-  const { todos, loading, error } = useSelector(
-    (state: RootState) => state.todos
-  );
-  const navigate = useNavigate();
+const Todolist = () => {
+  const [todos, setTodos] = useState<Todo[]>([]);
 
   useEffect(() => {
-    dispatch(fetchTodos());
-  }, [dispatch]);
+    const fetchTodos = async () => {
+      try {
+        const response = await axiosClient.get<Todo[]>("/todos");
+        setTodos(response.data);
+      } catch (error) {
+        console.error("Lỗi khi lấy danh sách todo:", error);
+      }
+    };
 
-  const handleEdit = (id: string) => {
-    // Điều hướng đến trang chỉnh sửa, bạn có thể tạo trang edit riêng
-    navigate(`/edit/${id}`);
-  };
-
-  const handleDelete = (id: string) => {
-    dispatch(deleteTodo(id));
-  };
+    fetchTodos();
+  }, []);
 
   return (
-    <div className="relative min-h-screen">
-      {loading && <p className="text-center">Đang tải...</p>}
-      {error && <p className="text-red-500 text-center">{error}</p>}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 p-6">
-        {todos.map((todo) => (
-          <TodoCard
-            key={todo.id}
-            id={todo.id}
-            title={todo.title}
-            completed={todo.completed}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-          />
-        ))}
-      </div>
-      {/* Floating "Tạo mới" button ở góc phải */}
-      <button
-        onClick={() => navigate("/create")}
-        className="fixed bottom-6 right-6 bg-green-600 text-white p-4 rounded-full shadow-lg hover:bg-green-700"
-      >
-        <FiPlus size={24} />
-      </button>
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+      {todos.map((todo) => (
+        <div
+          key={todo._id}
+          className="bg-white shadow-lg rounded-lg p-4 border"
+        >
+          <h3 className="text-xl font-bold">{todo.title}</h3>
+          <label className="flex items-center gap-2 mt-2">
+            <input
+              type="checkbox"
+              checked={todo.completed}
+              readOnly
+              className="w-4 h-4"
+            />
+            <span
+              className={todo.completed ? "text-green-500" : "text-red-500"}
+            >
+              {todo.completed ? "Hoàn thành" : "Chưa hoàn thành"}
+            </span>
+          </label>
+        </div>
+      ))}
     </div>
   );
 };
 
-export default TodoList;
+export default Todolist;

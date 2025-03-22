@@ -1,41 +1,13 @@
 import axios from "axios";
-import store from "../redux/store"; // Import store để gọi dispatch
-import { refreshAccessToken, logout } from "../redux/slices/authSlice";
+import store from "../redux/store";
+import { logout } from "../redux/slices/authSlice";
 
 const axiosClient = axios.create({
   baseURL: "http://localhost:3001/api",
-  withCredentials: true, // Quan trọng để gửi cookie refreshToken
+  withCredentials: true, // Nếu có dùng cookie cho mục đích khác
 });
 
-// Interceptor để xử lý token hết hạn
-axiosClient.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
-
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-      try {
-        const newToken = await store.dispatch(refreshAccessToken()).unwrap();
-
-        // Cập nhật token mới trong header
-        axiosClient.defaults.headers.common[
-          "Authorization"
-        ] = `Bearer ${newToken}`;
-        originalRequest.headers["Authorization"] = `Bearer ${newToken}`;
-
-        return axiosClient(originalRequest); // Gửi lại request ban đầu
-      } catch (err) {
-        console.log(err);
-        store.dispatch(logout()); // Nếu refresh token thất bại thì logout
-      }
-    }
-
-    return Promise.reject(error);
-  }
-);
-
-// Interceptor để tự động thêm access token vào request
+// Interceptor để thêm accessToken vào request
 axiosClient.interceptors.request.use((config) => {
   const accessToken = localStorage.getItem("accessToken");
   if (accessToken) {
@@ -43,5 +15,19 @@ axiosClient.interceptors.request.use((config) => {
   }
   return config;
 });
+
+// Interceptor xử lý lỗi 401 (Unauthorized)
+// Trong axiosClient.ts
+axiosClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem("accessToken");
+      store.dispatch(logout());
+      window.location.href = "/sign-in";
+    }
+    return Promise.reject(error);
+  }
+);
 
 export default axiosClient;
