@@ -15,7 +15,7 @@ const NavBar = () => {
   };
 
   return (
-    <nav className="flex items-center justify-between px-6 py-4 bg-white dark:bg-green-600 shadow-md">
+    <nav className="flex items-center justify-between px-6 py-4 bg-green-600 shadow-md">
       {/* Logo hoặc Tiêu đề */}
       <h1 className="text-3xl font-extrabold text-white">Todos</h1>
 

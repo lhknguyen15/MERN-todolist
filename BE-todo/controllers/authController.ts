@@ -44,7 +44,7 @@ export const signIn = async (req: Request, res: Response): Promise<any> => {
         .json({ error: "Thông tin đăng nhập không hợp lệ" });
 
     const accessToken = jwt.sign({ id: user._id }, JWT_SECRET, {
-      expiresIn: "15s",
+      expiresIn: "30m",
     });
 
     res.json({ accessToken });

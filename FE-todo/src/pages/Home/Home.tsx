@@ -1,11 +1,12 @@
-import React, { useEffect } from "react";
-import { useSelector, useDispatch } from "react-redux";
+import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
-import { RootState } from "../../redux/store";
-import { logout } from "../../redux/slices/authSlice";
-import NavBar from "./NavBar";
 import TodoList from "../../components/Todo/Todolist";
+import NavBar from "./NavBar";
+import AddTodoModal from "../../components/Todo/AddTodoModal";
+import { logout } from "../../redux/slices/authSlice";
+import { RootState } from "../../redux/store";
 
 interface DecodedToken {
   exp: number;
@@ -15,6 +16,8 @@ const Home = () => {
   const token = useSelector((state: RootState) => state.auth.token);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const [isOpen, setIsOpen] = useState(false);
+  const [refresh, setRefresh] = useState(false); // Thêm state để trigger cập nhật danh sách todo
 
   useEffect(() => {
     if (!token) {
@@ -29,16 +32,29 @@ const Home = () => {
         navigate("/sign-in");
       }
     } catch (error) {
-      console.log(error);
+      console.error("Lỗi xác thực token:", error);
       dispatch(logout());
       navigate("/sign-in");
     }
   }, [token, dispatch, navigate]);
 
   return (
-    <div>
+    <div className="relative">
       <NavBar />
-      <TodoList />
+      <TodoList refresh={refresh} /> {/* Truyền refresh xuống TodoList */}
+      {/* Nút mở modal */}
+      <button
+        onClick={() => setIsOpen(true)}
+        className="fixed bottom-6 right-6 bg-green-500 text-white px-6 py-4 text-4xl rounded-lg shadow-lg hover:bg-green-700 cursor-pointer transition-all"
+      >
+        +
+      </button>
+      {/* Modal thêm todo */}
+      <AddTodoModal
+        isOpen={isOpen}
+        setIsOpen={setIsOpen}
+        onTodoAdded={() => setRefresh(!refresh)}
+      />
     </div>
   );
 };

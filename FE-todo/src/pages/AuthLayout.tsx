@@ -4,8 +4,9 @@ import { Outlet } from "react-router-dom";
 const AuthLayout = () => {
   return (
     <div className="min-h-screen flex">
-      <div className="hidden md:flex bg-green-400 items-center justify-center w-full">
-        <h1 className="text-white text-4xl font-extrabold max-w-md leading-relaxed p-8">
+      <div className="flex-col hidden md:flex bg-green-400 items-center justify-center w-full">
+        <img className="w-52 h-auto bg-white rounded-lg p-2" src="logo.png" />
+        <h1 className="text-white text-2xl font-extrabold max-w-md leading-relaxed p-2">
           Welcome to Todos
         </h1>
       </div>

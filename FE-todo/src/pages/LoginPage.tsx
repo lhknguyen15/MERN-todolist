@@ -19,7 +19,6 @@ const LoginPage = () => {
       .unwrap()
       .then((response) => {
         console.log(response.data);
-
         navigate("/home"); // chuyển hướng sau khi đăng nhập thành công
         toast.success("Đăng nhập thành công!");
       })
