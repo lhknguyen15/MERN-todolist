@@ -13,7 +13,7 @@ interface TodoListProps {
 }
 const todosPerPage = 9;
 
-const Todolist: React.FC<TodoListProps> = ({ refresh }) => {
+const TodoList: React.FC<TodoListProps> = ({ refresh }) => {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -129,4 +129,4 @@ const Todolist: React.FC<TodoListProps> = ({ refresh }) => {
   );
 };
 
-export default Todolist;
+export default TodoList;
