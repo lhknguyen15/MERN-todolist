@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import axiosClient from "../../apis/axiosClient";
 import TodoCard from "./TodoCard";
+import { Button } from "../ui/button";
 
 interface Todo {
   _id: string;
@@ -10,17 +11,21 @@ interface Todo {
 interface TodoListProps {
   refresh: boolean; // Nhận prop từ Home.tsx
 }
+const todosPerPage = 9;
+
 const Todolist: React.FC<TodoListProps> = ({ refresh }) => {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
-
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [totalPages, setTotalPages] = useState<number>(1);
   // Fetch danh sách todo
   useEffect(() => {
     const fetchTodos = async () => {
       setLoading(true);
       try {
-        const response = await axiosClient.get<Todo[]>("/todos");
+        const response = await axiosClient.get<Todo[]>("/todos?limit=150");
         setTodos(response.data);
+        setTotalPages(Math.ceil(response.data.length / todosPerPage)); // Tính tổng số trang
       } catch (error) {
         console.error("Lỗi khi lấy danh sách todo:", error);
       } finally {
@@ -30,6 +35,19 @@ const Todolist: React.FC<TodoListProps> = ({ refresh }) => {
 
     fetchTodos();
   }, [refresh]);
+
+  // Lọc danh sách todo theo trang hiện tại
+  const paginatedTodos = todos.slice(
+    (currentPage - 1) * todosPerPage,
+    currentPage * todosPerPage
+  );
+
+  // Hàm chuyển trang
+  const handlePageChange = (newPage: number) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+    }
+  };
 
   // Hàm cập nhật trạng thái hoàn thành
   const handleToggleComplete = async (id: string, completed: boolean) => {
@@ -75,7 +93,7 @@ const Todolist: React.FC<TodoListProps> = ({ refresh }) => {
         <p className="text-center text-gray-500">Chưa có todo nào.</p>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {todos.map((todo) => (
+          {paginatedTodos.map((todo) => (
             <TodoCard
               key={todo._id}
               id={todo._id}
@@ -88,6 +106,25 @@ const Todolist: React.FC<TodoListProps> = ({ refresh }) => {
           ))}
         </div>
       )}
+      <div className="flex justify-center items-center gap-2 mt-6">
+        <Button
+          variant="outline"
+          disabled={currentPage === 1}
+          onClick={() => handlePageChange(currentPage - 1)}
+        >
+          Trước
+        </Button>
+        <span className="font-semibold">
+          {currentPage} / {Math.ceil(todos.length / todosPerPage)}
+        </span>
+        <Button
+          variant="outline"
+          disabled={currentPage === Math.ceil(todos.length / todosPerPage)}
+          onClick={() => handlePageChange(currentPage + 1)}
+        >
+          Tiếp
+        </Button>
+      </div>
     </div>
   );
 };

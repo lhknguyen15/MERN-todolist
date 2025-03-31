@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
+import { toast } from "react-toastify";
 
 interface DeleteTodoModalProps {
   isOpen: boolean;
@@ -26,9 +27,11 @@ const DeleteTodoModal: React.FC<DeleteTodoModalProps> = ({
     setIsLoading(true);
     try {
       await onConfirm();
+      toast.success("Xóa todo thành công!"); 
       onClose();
     } catch (error) {
       console.error("Lỗi khi xóa todo:", error);
+      toast.error("Xóa todo thất bại!"); 
     } finally {
       setIsLoading(false);
     }

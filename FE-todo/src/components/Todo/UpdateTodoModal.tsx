@@ -9,6 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader2 } from "lucide-react";
+import { toast } from "react-toastify";
 
 interface UpdateTodoModalProps {
   isOpen: boolean;
@@ -28,12 +29,15 @@ const UpdateTodoModal: React.FC<UpdateTodoModalProps> = ({
 
   const handleUpdate = async () => {
     if (!newTitle.trim()) return;
+
     setIsLoading(true);
     try {
       await onUpdate(newTitle);
+      toast.success("Cập nhật todo thành công!"); // 
       onClose();
     } catch (error) {
       console.error("Lỗi khi cập nhật todo:", error);
+      toast.error("Cập nhật thất bại!"); // 
     } finally {
       setIsLoading(false);
     }

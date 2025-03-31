@@ -8,6 +8,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import axiosClient from "../../apis/axiosClient";
+import { toast } from "react-toastify";
 
 interface AddTodoModalProps {
   isOpen: boolean;
@@ -32,8 +33,10 @@ const AddTodoModal: React.FC<AddTodoModalProps> = ({
       setTodoTitle("");
       setIsOpen(false);
       onTodoAdded(); // Gọi callback để cập nhật danh sách todo
+      toast.success("Thêm todo thành công!");
     } catch (error) {
       console.error("Lỗi khi thêm todo:", error);
+      toast.error("Thêm todo thất bại!");
     } finally {
       setLoading(false);
     }
