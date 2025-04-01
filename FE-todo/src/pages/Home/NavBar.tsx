@@ -5,7 +5,12 @@ import { FiSearch } from "react-icons/fi";
 import { useDispatch } from "react-redux";
 import { logout } from "../../redux/slices/authSlice";
 
-const NavBar = () => {
+interface NavBarProps {
+  onSearch: (term: string) => void;
+}
+
+const NavBar: React.FC<NavBarProps> = ({ onSearch }) => {
+  const [searchTerm, setSearchTerm] = useState("");
   const [showLogout, setShowLogout] = useState(false);
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -13,7 +18,10 @@ const NavBar = () => {
     dispatch(logout());
     navigate("/sign-in");
   };
-
+  const handleSearchClick = () => {
+    onSearch(searchTerm.trim());
+    console.log(searchTerm);
+  };
   return (
     <nav className="flex items-center justify-between px-6 py-4 bg-green-600 shadow-md">
       {/* Logo hoặc Tiêu đề */}
@@ -24,9 +32,14 @@ const NavBar = () => {
         <input
           type="text"
           placeholder="Tìm kiếm..."
-          className="w-full p-2 pl-4 border rounded-l-md focus:outline-none  bg-white border-white"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full p-2 pl-4 border rounded-l-md focus:outline-none bg-white border-white"
         />
-        <button className="px-6 py-1 bg-green-700 text-white rounded-r-md hover:bg-black-600">
+        <button
+          className="px-6 py-1 bg-green-700 text-white rounded-r-md hover:bg-black-600"
+          onClick={handleSearchClick} // Gọi hàm khi click
+        >
           <FiSearch />
         </button>
       </div>

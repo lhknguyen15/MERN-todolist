@@ -9,7 +9,6 @@ import { RootState } from "../../redux/store";
 import NavBar from "./NavBar";
 import TodoList from "@/components/Todo/TodoList";
 
-
 interface DecodedToken {
   exp: number;
 }
@@ -20,6 +19,7 @@ const Home = () => {
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [refresh, setRefresh] = useState(false); // Thêm state để trigger cập nhật danh sách todo
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     if (!token) {
@@ -42,8 +42,9 @@ const Home = () => {
 
   return (
     <div className="relative">
-      <NavBar />
-      <TodoList refresh={refresh} /> {/* Truyền refresh xuống TodoList */}
+      <NavBar onSearch={setSearchTerm} />
+      <TodoList searchTerm={searchTerm} refresh={refresh} />
+      {/* Truyền refresh xuống TodoList */}
       {/* Nút mở modal */}
       <button
         onClick={() => setIsOpen(true)}
