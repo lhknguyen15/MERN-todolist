@@ -3,7 +3,7 @@ import store from "../redux/store";
 import { logout } from "../redux/slices/authSlice";
 
 const axiosClient = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
+  baseURL: `${import.meta.env.VITE_API_URL}/api`,
   withCredentials: true, // Nếu có dùng cookie cho mục đích khác
 });
 
