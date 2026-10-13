@@ -76,26 +76,18 @@ const TodoList: React.FC<TodoListProps> = ({ refresh, searchTerm }) => {
 
   // Hàm cập nhật tiêu đề todo
   const handleEditTodo = async (id: string, newTitle: string) => {
-    try {
-      await axiosClient.put(`/todos/${id}`, { title: newTitle });
-      setTodos((prev) =>
-        prev.map((todo) =>
-          todo._id === id ? { ...todo, title: newTitle } : todo
-        )
-      );
-    } catch (error) {
-      console.error("Lỗi khi cập nhật todo:", error);
-    }
+    await axiosClient.put(`/todos/${id}`, { title: newTitle });
+    setTodos((prev) =>
+      prev.map((todo) =>
+        todo._id === id ? { ...todo, title: newTitle } : todo
+      )
+    );
   };
 
   // Hàm xóa todo
   const handleDeleteTodo = async (id: string) => {
-    try {
-      await axiosClient.delete(`/todos/${id}`);
-      setTodos((prev) => prev.filter((todo) => todo._id !== id));
-    } catch (error) {
-      console.error("Lỗi khi xóa todo:", error);
-    }
+    await axiosClient.delete(`/todos/${id}`);
+    setTodos((prev) => prev.filter((todo) => todo._id !== id));
   };
 
   return (

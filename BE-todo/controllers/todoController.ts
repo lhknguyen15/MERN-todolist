@@ -27,10 +27,39 @@ export const updateTodo = async (req: Request, res: Response): Promise<any> => {
   const { id } = req.params;
   const userId = (req as any).user.id;
   try {
+    const body = req.body;
+    if (!body || typeof body !== "object" || Array.isArray(body)) {
+      return res.status(400).json({ error: "Invalid update data" });
+    }
+
+    const allowedFields = ["title", "completed"];
+    if (Object.keys(body).some((field) => !allowedFields.includes(field))) {
+      return res.status(400).json({ error: "Unsupported update field" });
+    }
+
+    const updates: { title?: string; completed?: boolean } = {};
+    if ("title" in body) {
+      if (typeof body.title !== "string" || !body.title.trim()) {
+        return res.status(400).json({ error: "Title must be a non-empty string" });
+      }
+      updates.title = body.title.trim();
+    }
+
+    if ("completed" in body) {
+      if (typeof body.completed !== "boolean") {
+        return res.status(400).json({ error: "Completed must be a boolean" });
+      }
+      updates.completed = body.completed;
+    }
+
+    if (Object.keys(updates).length === 0) {
+      return res.status(400).json({ error: "No update fields provided" });
+    }
+
     // Tìm Todo theo id và userId để đảm bảo chỉ user sở hữu mới được chỉnh sửa
     const updatedTodo = await Todo.findOneAndUpdate(
       { _id: id, userId },
-      req.body,
+      { $set: updates },
       { new: true } // trả về document đã được cập nhật
     );
     if (!updatedTodo) {
