@@ -4,6 +4,7 @@ import { FaUserCircle } from "react-icons/fa";
 import { FiSearch } from "react-icons/fi";
 import { useDispatch } from "react-redux";
 import { logout } from "../../redux/slices/authSlice";
+import axiosClient from "../../apis/axiosClient";
 
 interface NavBarProps {
   onSearch: (term: string) => void;
@@ -14,9 +15,15 @@ const NavBar: React.FC<NavBarProps> = ({ onSearch }) => {
   const [showLogout, setShowLogout] = useState(false);
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const handleLogout = () => {
-    dispatch(logout());
-    navigate("/sign-in");
+  const handleLogout = async () => {
+    try {
+      await axiosClient.post("/auth/logout");
+    } catch (error) {
+      console.error("Logout request failed:", error);
+    } finally {
+      dispatch(logout());
+      navigate("/sign-in");
+    }
   };
   const handleSearchClick = () => {
     onSearch(searchTerm.trim());

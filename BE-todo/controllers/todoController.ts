@@ -1,8 +1,20 @@
 import { Request, Response } from "express";
 import Todo from "../models/Todo";
 
-export const createTodo = async (req: Request, res: Response) => {
-  const { title } = req.body;
+export const createTodo = async (req: Request, res: Response): Promise<void> => {
+  const body = req.body;
+  if (
+    !body ||
+    typeof body !== "object" ||
+    Array.isArray(body) ||
+    typeof body.title !== "string" ||
+    !body.title.trim()
+  ) {
+    res.status(400).json({ error: "Title must be a non-empty string" });
+    return;
+  }
+
+  const title = body.title.trim();
   const userId = (req as any).user.id;
   try {
     const todo = new Todo({ userId, title });

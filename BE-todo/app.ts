@@ -1,17 +1,15 @@
 import express from "express";
 import mongoose from "mongoose";
-import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import authRoutes from "./routes/authRoutes";
 import todoRoutes from "./routes/todoRoutes";
 import cors from "cors";
-
-dotenv.config();
+import { CORS_ORIGINS } from "./config/env";
 
 const app = express();
 app.use(
   cors({
-    origin: "https://fe-todo-seven.vercel.app",
+    origin: CORS_ORIGINS,
     credentials: true,
   })
 );

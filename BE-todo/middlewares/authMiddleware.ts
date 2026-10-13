@@ -1,8 +1,10 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
+import { JWT_SECRET } from "../config/env";
 
 interface DecodedToken {
   id: string;
+  tokenType: "access";
 }
 
 export const authenticateToken = (
@@ -10,21 +12,28 @@ export const authenticateToken = (
   res: Response,
   next: NextFunction
 ): void => {
-  const authHeader = req.headers.authorization;
-  const token = authHeader?.split(" ")[1];
+  const token = req.cookies?.accessToken;
 
   if (!token) {
     res.status(401).json({ message: "Unauthorized" });
     return;
   }
 
-  jwt.verify(token, process.env.JWT_SECRET!, (err, decoded) => {
-    if (err) {
-      console.error("JWT Verification Error:", err);
-      return res.status(403).json({ message: "Forbidden" });
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    if (
+      typeof decoded === "string" ||
+      decoded.tokenType !== "access" ||
+      typeof decoded.id !== "string"
+    ) {
+      res.status(401).json({ message: "Unauthorized" });
+      return;
     }
 
     (req as any).user = decoded as DecodedToken;
     next();
-  });
+  } catch (error) {
+    console.error("JWT Verification Error:", error);
+    res.status(401).json({ message: "Unauthorized" });
+  }
 };

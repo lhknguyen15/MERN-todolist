@@ -15,7 +15,16 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteTodo = exports.updateTodo = exports.getTodos = exports.createTodo = void 0;
 const Todo_1 = __importDefault(require("../models/Todo"));
 const createTodo = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { title } = req.body;
+    const body = req.body;
+    if (!body ||
+        typeof body !== "object" ||
+        Array.isArray(body) ||
+        typeof body.title !== "string" ||
+        !body.title.trim()) {
+        res.status(400).json({ error: "Title must be a non-empty string" });
+        return;
+    }
+    const title = body.title.trim();
     const userId = req.user.id;
     try {
         const todo = new Todo_1.default({ userId, title });

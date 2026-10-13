@@ -17,8 +17,7 @@ const LoginPage = () => {
     e.preventDefault();
     dispatch(loginUser({ email, password }))
       .unwrap()
-      .then((response) => {
-        console.log(response.data);
+      .then(() => {
         navigate("/home"); // chuyển hướng sau khi đăng nhập thành công
         toast.success("Đăng nhập thành công!");
       })

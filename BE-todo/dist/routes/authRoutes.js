@@ -2,7 +2,13 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const authController_1 = require("../controllers/authController");
+const authMiddleware_1 = require("../middlewares/authMiddleware");
+const csrfMiddleware_1 = require("../middlewares/csrfMiddleware");
 const router = (0, express_1.Router)();
 router.post("/register", authController_1.signUp);
 router.post("/login", authController_1.signIn);
+router.get("/csrf", authController_1.getCsrfToken);
+router.post("/refresh", csrfMiddleware_1.verifyCsrfToken, authController_1.refreshSession);
+router.post("/logout", csrfMiddleware_1.verifyCsrfToken, authController_1.logoutUser);
+router.get("/me", authMiddleware_1.authenticateToken, authController_1.getCurrentUser);
 exports.default = router;

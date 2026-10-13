@@ -66,8 +66,7 @@ const SignUpPage = () => {
     }
     dispatch(signUpUser({ username, email, password }))
       .unwrap()
-      .then((response) => {
-        console.log(response.data);
+      .then(() => {
         navigate("/home");
         toast.success("Đăng ký thành công");
       })

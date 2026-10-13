@@ -1,32 +1,75 @@
-import axios from "axios";
+import axios, { InternalAxiosRequestConfig } from "axios";
 import store from "../redux/store";
 import { logout } from "../redux/slices/authSlice";
 
+interface RetryableRequest extends InternalAxiosRequestConfig {
+  _retry?: boolean;
+}
+
+const apiBaseUrl = `${import.meta.env.VITE_API_URL}/api`;
+let csrfToken: string | null = null;
+
+const loadCsrfToken = async () => {
+  const response = await axios.get<{ csrfToken: string }>(`${apiBaseUrl}/auth/csrf`, {
+    withCredentials: true,
+  });
+  csrfToken = response.data.csrfToken;
+};
+
 const axiosClient = axios.create({
-  baseURL: `${import.meta.env.VITE_API_URL}/api`,
-  withCredentials: true, // Nếu có dùng cookie cho mục đích khác
+  baseURL: apiBaseUrl,
+  withCredentials: true,
 });
 
-// Interceptor để thêm accessToken vào request
-axiosClient.interceptors.request.use((config) => {
-  const accessToken = localStorage.getItem("accessToken");
-  if (accessToken) {
-    config.headers["Authorization"] = `Bearer ${accessToken}`;
+axiosClient.interceptors.request.use(async (config) => {
+  const method = config.method?.toLowerCase();
+  const isUnsafeMethod = method && !["get", "head", "options"].includes(method);
+
+  if (isUnsafeMethod && !csrfToken) {
+    await loadCsrfToken();
   }
+
+  if (isUnsafeMethod && csrfToken) {
+    config.headers["X-CSRF-Token"] = csrfToken;
+  }
+
   return config;
 });
 
-// Interceptor xử lý lỗi 401 (Unauthorized)
-// Trong axiosClient.ts
 axiosClient.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem("accessToken");
+  (response) => {
+    const responseCsrfToken = (response.data as { csrfToken?: unknown } | undefined)
+      ?.csrfToken;
+    if (typeof responseCsrfToken === "string") {
+      csrfToken = responseCsrfToken;
+    }
+    if (response.config.url?.includes("/auth/logout")) {
+      csrfToken = null;
+    }
+    return response;
+  },
+  async (error) => {
+    const request = error.config as RetryableRequest | undefined;
+    const isRefreshRequest = request?.url?.includes("/auth/refresh");
+
+    if (
+      error.response?.status !== 401 ||
+      !request ||
+      request._retry ||
+      isRefreshRequest
+    ) {
+      return Promise.reject(error);
+    }
+
+    request._retry = true;
+    try {
+      await axiosClient.post("/auth/refresh");
+      return await axiosClient(request);
+    } catch (refreshError) {
       store.dispatch(logout());
       window.location.href = "/sign-in";
+      return Promise.reject(refreshError);
     }
-    return Promise.reject(error);
   }
 );
 
