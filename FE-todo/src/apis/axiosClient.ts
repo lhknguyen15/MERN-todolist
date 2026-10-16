@@ -6,7 +6,7 @@ interface RetryableRequest extends InternalAxiosRequestConfig {
   _retry?: boolean;
 }
 
-const apiBaseUrl = `${import.meta.env.VITE_API_URL}/api`;
+const apiBaseUrl = "/api";
 let csrfToken: string | null = null;
 
 const loadCsrfToken = async () => {
