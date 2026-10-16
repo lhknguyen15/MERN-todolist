@@ -6,7 +6,7 @@ import axiosClient from "../../apis/axiosClient";
 import { logout, setUser } from "../../redux/slices/authSlice";
 import { AppDispatch } from "../../redux/store";
 import NavBar from "./NavBar";
-import TodoList from "@/components/Todo/TodoList";
+import TodoList from "@/components/Todo/Todolist";
 
 interface User {
   id: string;
