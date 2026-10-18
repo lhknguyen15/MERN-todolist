@@ -3,6 +3,8 @@ import { useDispatch } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
 import { signUpUser } from "../redux/slices/authSlice";
 import { AppDispatch } from "../redux/store";
 
@@ -67,7 +69,7 @@ const SignUpPage = () => {
     dispatch(signUpUser({ username, email, password }))
       .unwrap()
       .then(() => {
-        navigate("/home");
+        navigate("/");
         toast.success("Đăng ký thành công");
       })
       .catch((err) => {
@@ -89,13 +91,13 @@ const SignUpPage = () => {
           >
             Họ và tên
           </label>
-          <input
-            id="fullName"
+          <Input
+            id="username"
             type="text"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             placeholder="Nhập họ và tên"
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none"
+            className="mt-1 h-11 text-base"
           />
         </div>
         <div>
@@ -105,13 +107,13 @@ const SignUpPage = () => {
           >
             Email
           </label>
-          <input
+          <Input
             id="email"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="Nhập email"
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none"
+            className="mt-1 h-11 text-base"
           />
         </div>
         <div>
@@ -121,13 +123,13 @@ const SignUpPage = () => {
           >
             Mật khẩu
           </label>
-          <input
+          <Input
             id="password"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Nhập mật khẩu"
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none"
+            className="mt-1 h-11 text-base"
           />
         </div>
         <div>
@@ -137,22 +139,22 @@ const SignUpPage = () => {
           >
             Xác nhận mật khẩu
           </label>
-          <input
+          <Input
             id="confirmPassword"
             type="password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             placeholder="Nhập lại mật khẩu"
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none"
+            className="mt-1 h-11 text-base"
           />
         </div>
         <div>
-          <button
+          <Button
             type="submit"
-            className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-green-400 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 cursor-pointer"
+            className="h-11 w-full bg-emerald-500 text-base text-white hover:bg-emerald-600"
           >
             Đăng ký
-          </button>
+          </Button>
         </div>
       </form>
       <p className="mt-2 text-center text-sm text-gray-600">

@@ -1,140 +1,166 @@
+import { Search, Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
-import axiosClient from "../../apis/axiosClient";
 import TodoCard from "./TodoCard";
-import { Button } from "../ui/button";
-
-interface Todo {
-  _id: string;
-  title: string;
-  completed: boolean;
-}
+import { Todo } from "../../types/todo";
+import { TodoPriority } from "../../types/todo";
+import { Card, CardContent } from "../ui/card";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "../ui/pagination";
 
 interface TodoListProps {
-  refresh: boolean;
+  todos: Todo[];
+  loading: boolean;
+  hasTodos: boolean;
   searchTerm: string;
+  resetKey: string;
+  onEdit: (id: string, newTitle: string, priority: TodoPriority) => Promise<void>;
+  onDelete: (id: string) => Promise<void>;
+  onToggleComplete: (id: string, completed: boolean) => Promise<void>;
 }
 
-const todosPerPage = 9;
+const TodoList: React.FC<TodoListProps> = ({
+  todos,
+  loading,
+  hasTodos,
+  searchTerm,
+  resetKey,
+  onEdit,
+  onDelete,
+  onToggleComplete,
+}) => {
+  const pageSize = 9;
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageCount = Math.max(1, Math.ceil(todos.length / pageSize));
 
-const TodoList: React.FC<TodoListProps> = ({ refresh, searchTerm }) => {
-  const [todos, setTodos] = useState<Todo[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [currentPage, setCurrentPage] = useState<number>(1);
-
+  useEffect(() => setCurrentPage(1), [resetKey]);
   useEffect(() => {
-    const fetchTodos = async () => {
-      setLoading(true);
-      try {
-        const response = await axiosClient.get<Todo[]>("/todos?limit=150");
-        setTodos(response.data);
-      } catch (error) {
-        console.error("Lỗi khi lấy danh sách todo:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+    setCurrentPage((page) => Math.min(page, pageCount));
+  }, [pageCount]);
 
-    fetchTodos();
-  }, [refresh]);
-
-  // Lọc danh sách todo theo từ khóa tìm kiếm
-  const filteredTodos = todos.filter((todo) =>
-    todo.title.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  // Tính lại số trang dựa trên kết quả tìm kiếm
-  const totalPages = Math.ceil(filteredTodos.length / todosPerPage);
-
-  // Cập nhật trang về 1 khi searchTerm thay đổi
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm]);
-
-  // Lọc danh sách theo trang hiện tại
-  const paginatedTodos = filteredTodos.slice(
-    (currentPage - 1) * todosPerPage,
-    currentPage * todosPerPage
-  );
-
-  const handlePageChange = (newPage: number) => {
-    if (newPage >= 1 && newPage <= totalPages) {
-      setCurrentPage(newPage);
-    }
-  };
-
-  // Hàm cập nhật trạng thái hoàn thành
-  const handleToggleComplete = async (id: string, completed: boolean) => {
-    try {
-      await axiosClient.put(`/todos/${id}`, { completed });
-      setTodos((prev) =>
-        prev.map((todo) => (todo._id === id ? { ...todo, completed } : todo))
-      );
-    } catch (error) {
-      console.error("Lỗi khi cập nhật trạng thái todo:", error);
-    }
-  };
-
-  // Hàm cập nhật tiêu đề todo
-  const handleEditTodo = async (id: string, newTitle: string) => {
-    await axiosClient.put(`/todos/${id}`, { title: newTitle });
-    setTodos((prev) =>
-      prev.map((todo) =>
-        todo._id === id ? { ...todo, title: newTitle } : todo
-      )
+  if (loading) {
+    return (
+      <Card className="border-slate-100 bg-card py-16 text-center shadow-sm dark:border-border">
+        <CardContent>
+        <div className="mx-auto mb-3 h-8 w-8 animate-spin rounded-full border-4 border-emerald-100 border-t-emerald-500" />
+        <p className="text-sm text-slate-500 dark:text-muted-foreground">Đang tải danh sách việc cần làm...</p>
+        </CardContent>
+      </Card>
     );
-  };
+  }
 
-  // Hàm xóa todo
-  const handleDeleteTodo = async (id: string) => {
-    await axiosClient.delete(`/todos/${id}`);
-    setTodos((prev) => prev.filter((todo) => todo._id !== id));
-  };
+  if (todos.length === 0) {
+    const emptyTitle = hasTodos
+      ? searchTerm
+        ? "Không tìm thấy việc phù hợp"
+        : "Chưa có việc nào trong mục này"
+      : "Bắt đầu với việc đầu tiên";
+    const emptyDescription = hasTodos
+      ? searchTerm
+        ? `Không có việc nào khớp với “${searchTerm}”. Thử từ khóa khác nhé.`
+        : "Các việc khớp với bộ lọc này sẽ xuất hiện ở đây."
+      : "Ghi lại một việc bạn muốn hoàn thành. Danh sách sẽ được lưu tự động.";
+
+    return (
+      <Card className="border-dashed border-emerald-200 bg-card py-16 text-center shadow-none dark:border-emerald-900">
+        <CardContent>
+        <span className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600">
+          {hasTodos ? <Search size={25} /> : <Sparkles size={25} />}
+        </span>
+        <h3 className="text-lg font-semibold text-slate-800 dark:text-card-foreground">{emptyTitle}</h3>
+        <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-slate-500 dark:text-muted-foreground">{emptyDescription}</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const pageTodos = todos.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  const firstItem = (currentPage - 1) * pageSize + 1;
+  const lastItem = Math.min(currentPage * pageSize, todos.length);
+  let pageItems: (number | "ellipsis")[];
+  if (pageCount <= 5) {
+    pageItems = Array.from({ length: pageCount }, (_, index) => index + 1);
+  } else if (currentPage <= 3) {
+    pageItems = [1, 2, 3, 4, "ellipsis", pageCount];
+  } else if (currentPage >= pageCount - 2) {
+    pageItems = [1, "ellipsis", pageCount - 3, pageCount - 2, pageCount - 1, pageCount];
+  } else {
+    pageItems = [1, "ellipsis", currentPage - 1, currentPage, currentPage + 1, "ellipsis", pageCount];
+  }
 
   return (
-    <div className="p-4">
-      {loading ? (
-        <p className="text-center text-gray-500">Đang tải...</p>
-      ) : filteredTodos.length === 0 ? (
-        <p className="text-center text-gray-500">Không tìm thấy kết quả.</p>
-      ) : (
-        <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {paginatedTodos.map((todo) => (
-              <TodoCard
-                key={todo._id}
-                id={todo._id}
-                title={todo.title}
-                completed={todo.completed}
-                onEdit={handleEditTodo}
-                onDelete={handleDeleteTodo}
-                onToggleComplete={handleToggleComplete}
-              />
-            ))}
-          </div>
-
-          {/* Phân trang */}
-          <div className="flex justify-center items-center gap-2 mt-6">
-            <Button
-              variant="outline"
-              disabled={currentPage === 1}
-              onClick={() => handlePageChange(currentPage - 1)}
-            >
-              Trước
-            </Button>
-            <span className="font-semibold">
-              {currentPage} / {totalPages}
-            </span>
-            <Button
-              variant="outline"
-              disabled={currentPage === totalPages}
-              onClick={() => handlePageChange(currentPage + 1)}
-            >
-              Tiếp
-            </Button>
-          </div>
-        </>
+    <>
+      <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3" aria-label="Danh sách việc cần làm">
+      {pageTodos.map((todo) => (
+        <li key={todo.id}>
+          <TodoCard
+            id={todo.id}
+            title={todo.title}
+            completed={todo.completed}
+            priority={todo.priority}
+            onEdit={onEdit}
+            onDelete={onDelete}
+            onToggleComplete={onToggleComplete}
+          />
+        </li>
+      ))}
+      </ul>
+      {todos.length > pageSize && (
+        <div className="mt-6 flex flex-col gap-3 rounded-xl border border-slate-200 bg-card px-4 py-3 text-card-foreground sm:flex-row sm:items-center sm:justify-between dark:border-border">
+          <p className="text-sm text-slate-500 dark:text-muted-foreground">Hiển thị {firstItem}–{lastItem} trong {todos.length} công việc</p>
+          <Pagination className="mx-0 w-auto justify-end">
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  href="#"
+                  aria-disabled={currentPage === 1}
+                  className={currentPage === 1 ? "pointer-events-none opacity-40" : ""}
+                  onClick={(event) => {
+                    event.preventDefault();
+                    setCurrentPage((page) => Math.max(1, page - 1));
+                  }}
+                />
+              </PaginationItem>
+              {pageItems.map((pageItem, index) => (
+                <PaginationItem key={`${pageItem}-${index}`}>
+                  {pageItem === "ellipsis" ? (
+                    <PaginationEllipsis />
+                  ) : (
+                    <PaginationLink
+                      href="#"
+                      isActive={currentPage === pageItem}
+                      onClick={(event) => {
+                        event.preventDefault();
+                        setCurrentPage(pageItem);
+                      }}
+                    >
+                      {pageItem}
+                    </PaginationLink>
+                  )}
+                </PaginationItem>
+              ))}
+              <PaginationItem>
+                <PaginationNext
+                  href="#"
+                  aria-disabled={currentPage === pageCount}
+                  className={currentPage === pageCount ? "pointer-events-none opacity-40" : ""}
+                  onClick={(event) => {
+                    event.preventDefault();
+                    setCurrentPage((page) => Math.min(pageCount, page + 1));
+                  }}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        </div>
       )}
-    </div>
+    </>
   );
 };
 

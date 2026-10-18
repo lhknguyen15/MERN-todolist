@@ -6,6 +6,7 @@ const authMiddleware_1 = require("../middlewares/authMiddleware");
 const csrfMiddleware_1 = require("../middlewares/csrfMiddleware");
 const router = (0, express_1.Router)();
 router.post("/", authMiddleware_1.authenticateToken, csrfMiddleware_1.verifyCsrfToken, todoController_1.createTodo);
+router.post("/import", authMiddleware_1.authenticateToken, csrfMiddleware_1.verifyCsrfToken, todoController_1.importGuestTodos);
 router.get("/", authMiddleware_1.authenticateToken, todoController_1.getTodos);
 router.put("/:id", authMiddleware_1.authenticateToken, csrfMiddleware_1.verifyCsrfToken, todoController_1.updateTodo);
 router.delete("/:id", authMiddleware_1.authenticateToken, csrfMiddleware_1.verifyCsrfToken, todoController_1.deleteTodo);

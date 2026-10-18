@@ -3,6 +3,8 @@ import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
 import { loginUser } from "../redux/slices/authSlice";
 import { AppDispatch, RootState } from "../redux/store";
 const LoginPage = () => {
@@ -18,7 +20,7 @@ const LoginPage = () => {
     dispatch(loginUser({ email, password }))
       .unwrap()
       .then(() => {
-        navigate("/home"); // chuyển hướng sau khi đăng nhập thành công
+        navigate("/");
         toast.success("Đăng nhập thành công!");
       })
       .catch((error) => {
@@ -36,12 +38,12 @@ const LoginPage = () => {
           <label className="block text-sm font-medium text-gray-700">
             Email
           </label>
-          <input
+          <Input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="Nhập email"
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"
+            className="mt-1 h-11 text-base"
           />
         </div>
         <div>
@@ -49,12 +51,12 @@ const LoginPage = () => {
             Mật khẩu
           </label>
           <div className="relative">
-            <input
+            <Input
               type={showPassword ? "text" : "password"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Nhập mật khẩu"
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"
+              className="mt-1 h-11 pr-10 text-base"
             />
             <button
               type="button"
@@ -70,16 +72,13 @@ const LoginPage = () => {
           </div>
         </div>
         <div>
-          <button
+          <Button
             type="submit"
-            className="group relative w-full flex justify-center py-2 px-4 
-                           border border-transparent text-sm font-medium 
-                           rounded-md text-white bg-green-400 hover:bg-green-700 
-                           focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 cursor-pointer"
+            className="h-11 w-full bg-emerald-500 text-base text-white hover:bg-emerald-600"
             disabled={loading}
           >
             {loading ? "Đang đăng nhập..." : "Đăng nhập"}
-          </button>
+          </Button>
         </div>
       </form>
       <p className="mt-2 text-center text-sm text-gray-600">

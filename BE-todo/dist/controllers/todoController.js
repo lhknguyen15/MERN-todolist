@@ -12,9 +12,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteTodo = exports.updateTodo = exports.getTodos = exports.createTodo = void 0;
+exports.deleteTodo = exports.updateTodo = exports.getTodos = exports.importGuestTodos = exports.createTodo = void 0;
 const Todo_1 = __importDefault(require("../models/Todo"));
+const isRecord = (value) => typeof value === "object" && value !== null && !Array.isArray(value);
 const createTodo = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
     const body = req.body;
     if (!body ||
         typeof body !== "object" ||
@@ -24,10 +26,15 @@ const createTodo = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         res.status(400).json({ error: "Title must be a non-empty string" });
         return;
     }
+    const priority = (_a = body.priority) !== null && _a !== void 0 ? _a : "medium";
+    if (priority !== "low" && priority !== "medium" && priority !== "high") {
+        res.status(400).json({ error: "Priority must be low, medium, or high" });
+        return;
+    }
     const title = body.title.trim();
     const userId = req.user.id;
     try {
-        const todo = new Todo_1.default({ userId, title });
+        const todo = new Todo_1.default({ userId, title, priority });
         yield todo.save();
         res.status(201).json(todo);
     }
@@ -36,6 +43,65 @@ const createTodo = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     }
 });
 exports.createTodo = createTodo;
+const importGuestTodos = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
+    const body = req.body;
+    if (!isRecord(body) || !Array.isArray(body.todos) || body.todos.length > 500) {
+        res.status(400).json({ error: "Invalid todo import data" });
+        return;
+    }
+    const todosByClientId = new Map();
+    for (const item of body.todos) {
+        if (!isRecord(item)) {
+            res.status(400).json({ error: "Invalid todo import data" });
+            return;
+        }
+        const { clientId, title, completed } = item;
+        const priority = (_a = item.priority) !== null && _a !== void 0 ? _a : "medium";
+        if (typeof clientId !== "string" ||
+            !clientId.trim() ||
+            clientId.length > 100 ||
+            typeof title !== "string" ||
+            !title.trim() ||
+            (completed !== undefined && typeof completed !== "boolean") ||
+            (priority !== "low" && priority !== "medium" && priority !== "high")) {
+            res.status(400).json({ error: "Invalid todo import data" });
+            return;
+        }
+        todosByClientId.set(clientId, {
+            clientId,
+            title: title.trim(),
+            completed: completed === true,
+            priority,
+        });
+    }
+    if (todosByClientId.size === 0) {
+        res.json({ imported: 0 });
+        return;
+    }
+    const userId = req.user.id;
+    try {
+        yield Todo_1.default.bulkWrite([...todosByClientId.values()].map((todo) => ({
+            updateOne: {
+                filter: { userId, clientId: todo.clientId },
+                update: {
+                    $set: { title: todo.title, completed: todo.completed, priority: todo.priority },
+                    $setOnInsert: { userId, clientId: todo.clientId },
+                },
+                upsert: true,
+            },
+        })));
+        const importedTodos = yield Todo_1.default.find({
+            userId,
+            clientId: { $in: [...todosByClientId.keys()] },
+        });
+        res.json({ imported: importedTodos.length, todos: importedTodos });
+    }
+    catch (_b) {
+        res.status(500).json({ error: "Could not import todos" });
+    }
+});
+exports.importGuestTodos = importGuestTodos;
 const getTodos = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const userId = req.user.id;
     try {
@@ -56,7 +122,7 @@ const updateTodo = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         if (!body || typeof body !== "object" || Array.isArray(body)) {
             return res.status(400).json({ error: "Invalid update data" });
         }
-        const allowedFields = ["title", "completed"];
+        const allowedFields = ["title", "completed", "priority"];
         if (Object.keys(body).some((field) => !allowedFields.includes(field))) {
             return res.status(400).json({ error: "Unsupported update field" });
         }
@@ -72,6 +138,12 @@ const updateTodo = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
                 return res.status(400).json({ error: "Completed must be a boolean" });
             }
             updates.completed = body.completed;
+        }
+        if ("priority" in body) {
+            if (body.priority !== "low" && body.priority !== "medium" && body.priority !== "high") {
+                return res.status(400).json({ error: "Priority must be low, medium, or high" });
+            }
+            updates.priority = body.priority;
         }
         if (Object.keys(updates).length === 0) {
             return res.status(400).json({ error: "No update fields provided" });

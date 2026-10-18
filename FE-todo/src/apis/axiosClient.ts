@@ -67,7 +67,6 @@ axiosClient.interceptors.response.use(
       return await axiosClient(request);
     } catch (refreshError) {
       store.dispatch(logout());
-      window.location.href = "/sign-in";
       return Promise.reject(refreshError);
     }
   }

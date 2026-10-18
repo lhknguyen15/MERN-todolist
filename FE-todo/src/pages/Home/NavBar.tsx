@@ -1,75 +1,69 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { FaUserCircle } from "react-icons/fa";
-import { FiSearch } from "react-icons/fi";
-import { useDispatch } from "react-redux";
-import { logout } from "../../redux/slices/authSlice";
-import axiosClient from "../../apis/axiosClient";
+import { LogOut, Moon, Search, Sun } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Button } from "../../components/ui/button";
+import { Input } from "../../components/ui/input";
 
 interface NavBarProps {
+  user: { id: string; username: string; email: string } | null;
+  onLogout: () => void;
   onSearch: (term: string) => void;
+  isDark: boolean;
+  onToggleTheme: () => void;
 }
 
-const NavBar: React.FC<NavBarProps> = ({ onSearch }) => {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [showLogout, setShowLogout] = useState(false);
-  const navigate = useNavigate();
-  const dispatch = useDispatch();
-  const handleLogout = async () => {
-    try {
-      await axiosClient.post("/auth/logout");
-    } catch (error) {
-      console.error("Logout request failed:", error);
-    } finally {
-      dispatch(logout());
-      navigate("/sign-in");
-    }
-  };
-  const handleSearchClick = () => {
-    onSearch(searchTerm.trim());
-    console.log(searchTerm);
-  };
-  return (
-    <nav className="flex items-center justify-between px-6 py-4 bg-green-600 shadow-md">
-      {/* Logo hoặc Tiêu đề */}
-      <h1 className="text-3xl font-extrabold text-white">Todos</h1>
+const NavBar: React.FC<NavBarProps> = ({ user, onLogout, onSearch, isDark, onToggleTheme }) => (
+  <header className="sticky top-0 z-20 border-b border-emerald-100 bg-white/90 backdrop-blur dark:border-border dark:bg-background/90">
+    <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:gap-8 sm:px-6">
+      <Link to="/" className="flex shrink-0 items-center gap-2.5 text-2xl font-bold tracking-tight text-slate-900 dark:text-foreground" aria-label="Todos, trang chủ">
+        <img src="/todos-logo.png" alt="" className="size-9 rounded-full object-contain" />
+        Todos
+      </Link>
 
-      {/* Thanh tìm kiếm */}
-      <div className="relative flex w-1/3">
-        <input
-          type="text"
-          placeholder="Tìm kiếm..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full p-2 pl-4 border rounded-l-md focus:outline-none bg-white border-white"
+      <label className="relative mx-auto flex min-w-0 max-w-xl flex-1 items-center">
+        <Search size={19} className="pointer-events-none absolute left-3 text-muted-foreground" />
+        <span className="sr-only">Tìm kiếm công việc</span>
+        <Input
+          type="search"
+          onChange={(event) => onSearch(event.target.value)}
+          placeholder="Tìm kiếm công việc..."
+          className="h-11 pl-10 pr-3 text-base"
         />
-        <button
-          className="px-6 py-1 bg-green-700 text-white rounded-r-md hover:bg-black-600"
-          onClick={handleSearchClick} // Gọi hàm khi click
-        >
-          <FiSearch />
-        </button>
-      </div>
+      </label>
 
-      {/* Avatar và nút Logout */}
-      <div className="relative flex items-center gap-4">
-        <div className="relative">
-          <FaUserCircle
-            className="text-2xl text-white cursor-pointer"
-            onClick={() => setShowLogout(!showLogout)}
-          />
-          {showLogout && (
-            <button
-              className="absolute right-0 mt-2 w-24 bg-white text-black text-sm py-1 px-2 rounded-md shadow-md hover:bg-gray-200"
-              onClick={handleLogout}
+      <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          onClick={onToggleTheme}
+          aria-label={isDark ? "Chuyển sang giao diện sáng" : "Chuyển sang giao diện tối"}
+          title={isDark ? "Giao diện sáng" : "Giao diện tối"}
+        >
+          {isDark ? <Sun size={18} /> : <Moon size={18} />}
+        </Button>
+        {user ? (
+          <>
+            <span className="hidden max-w-40 truncate text-base font-medium text-slate-700 dark:text-muted-foreground md:inline">
+              {user.username}
+            </span>
+            <Button
+              onClick={onLogout}
+              variant="outline"
+              size="default"
+              className="text-base"
             >
-              Đăng xuất
-            </button>
-          )}
-        </div>
+              <LogOut size={16} />
+              <span className="hidden sm:inline">Đăng xuất</span>
+            </Button>
+          </>
+        ) : (
+          <Button asChild className="bg-emerald-500 text-base text-white hover:bg-emerald-600">
+            <Link to="/sign-in">Đăng nhập</Link>
+          </Button>
+        )}
       </div>
-    </nav>
-  );
-};
+    </div>
+  </header>
+);
 
 export default NavBar;
