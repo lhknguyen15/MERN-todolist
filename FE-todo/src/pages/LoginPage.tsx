@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
+import { Eye, EyeOff } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -20,7 +20,7 @@ const LoginPage = () => {
     dispatch(loginUser({ email, password }))
       .unwrap()
       .then(() => {
-        navigate("/");
+        navigate("/dashboard", { replace: true });
         toast.success("Đăng nhập thành công!");
       })
       .catch((error) => {
@@ -30,48 +30,50 @@ const LoginPage = () => {
 
   return (
     <div className="max-w-sm w-full space-y-8">
-      <h2 className="mt-6 text-center text-3xl font-extrabold text-green-600">
+      <h2 className="text-center text-3xl font-semibold tracking-tight text-slate-900 dark:text-foreground">
         Đăng nhập
       </h2>
-      <form className="mt-8 space-y-6" onSubmit={handleLogin}>
+      <p className="mt-2 text-center text-sm text-slate-500 dark:text-muted-foreground">
+        Đăng nhập để đồng bộ công việc trên các thiết bị.
+      </p>
+      <form className="mt-7 space-y-5" onSubmit={handleLogin}>
         <div>
-          <label className="block text-sm font-medium text-gray-700">
+          <label htmlFor="login-email" className="block text-sm font-medium text-slate-700 dark:text-foreground">
             Email
           </label>
           <Input
+            id="login-email"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="Nhập email"
-            className="mt-1 h-11 text-base"
+            className="mt-1.5 h-11 text-base"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700">
+          <label htmlFor="login-password" className="block text-sm font-medium text-slate-700 dark:text-foreground">
             Mật khẩu
           </label>
           <div className="relative">
             <Input
+              id="login-password"
               type={showPassword ? "text" : "password"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Nhập mật khẩu"
-              className="mt-1 h-11 pr-10 text-base"
+              className="mt-1.5 h-11 pr-10 text-base"
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute inset-y-0 right-0 pr-3 flex items-center"
+              aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+              className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-500 hover:text-emerald-600"
             >
-              {showPassword ? (
-                <AiOutlineEyeInvisible className="text-gray-400" size={20} />
-              ) : (
-                <AiOutlineEye className="text-gray-400" size={20} />
-              )}
+              {showPassword ? <EyeOff size={19} /> : <Eye size={19} />}
             </button>
           </div>
         </div>
-        <div>
+        <div className="pt-1">
           <Button
             type="submit"
             className="h-11 w-full bg-emerald-500 text-base text-white hover:bg-emerald-600"
@@ -81,11 +83,11 @@ const LoginPage = () => {
           </Button>
         </div>
       </form>
-      <p className="mt-2 text-center text-sm text-gray-600">
+      <p className="mt-6 text-center text-sm text-slate-600 dark:text-muted-foreground">
         Bạn chưa có tài khoản?{" "}
         <Link
           to="/sign-up"
-          className="font-medium text-green-600 hover:text-green-500"
+          className="font-semibold text-emerald-700 hover:text-emerald-600 dark:text-emerald-300"
         >
           Đăng ký
         </Link>

@@ -1,12 +1,12 @@
 import React, { useState } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { signUpUser } from "../redux/slices/authSlice";
-import { AppDispatch } from "../redux/store";
+import { AppDispatch, RootState } from "../redux/store";
 
 const SignUpPage = () => {
   const [username, setUsername] = useState("");
@@ -14,6 +14,7 @@ const SignUpPage = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const dispatch = useDispatch<AppDispatch>();
+  const { loading } = useSelector((state: RootState) => state.auth);
   const navigate = useNavigate();
 
   const validateEmail = (email: string) => {
@@ -69,7 +70,7 @@ const SignUpPage = () => {
     dispatch(signUpUser({ username, email, password }))
       .unwrap()
       .then(() => {
-        navigate("/");
+        navigate("/dashboard", { replace: true });
         toast.success("Đăng ký thành công");
       })
       .catch((err) => {
@@ -80,14 +81,17 @@ const SignUpPage = () => {
 
   return (
     <div className="max-w-sm w-full space-y-8">
-      <h2 className="mt-6 text-center text-3xl font-extrabold text-green-600">
+      <h2 className="text-center text-3xl font-semibold tracking-tight text-slate-900 dark:text-foreground">
         Đăng ký
       </h2>
-      <form className="mt-8 space-y-6" onSubmit={handleSignup}>
+      <p className="mt-2 text-center text-sm text-slate-500 dark:text-muted-foreground">
+        Tạo tài khoản để lưu công việc của bạn.
+      </p>
+      <form className="mt-7 space-y-4" onSubmit={handleSignup}>
         <div>
           <label
             htmlFor="username"
-            className="block text-sm font-medium text-gray-700"
+            className="block text-sm font-medium text-slate-700 dark:text-foreground"
           >
             Họ và tên
           </label>
@@ -97,13 +101,13 @@ const SignUpPage = () => {
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             placeholder="Nhập họ và tên"
-            className="mt-1 h-11 text-base"
+            className="mt-1.5 h-11 text-base"
           />
         </div>
         <div>
           <label
             htmlFor="email"
-            className="block text-sm font-medium text-gray-700"
+            className="block text-sm font-medium text-slate-700 dark:text-foreground"
           >
             Email
           </label>
@@ -113,13 +117,13 @@ const SignUpPage = () => {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="Nhập email"
-            className="mt-1 h-11 text-base"
+            className="mt-1.5 h-11 text-base"
           />
         </div>
         <div>
           <label
             htmlFor="password"
-            className="block text-sm font-medium text-gray-700"
+            className="block text-sm font-medium text-slate-700 dark:text-foreground"
           >
             Mật khẩu
           </label>
@@ -129,13 +133,13 @@ const SignUpPage = () => {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Nhập mật khẩu"
-            className="mt-1 h-11 text-base"
+            className="mt-1.5 h-11 text-base"
           />
         </div>
         <div>
           <label
             htmlFor="confirmPassword"
-            className="block text-sm font-medium text-gray-700"
+            className="block text-sm font-medium text-slate-700 dark:text-foreground"
           >
             Xác nhận mật khẩu
           </label>
@@ -145,23 +149,24 @@ const SignUpPage = () => {
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             placeholder="Nhập lại mật khẩu"
-            className="mt-1 h-11 text-base"
+            className="mt-1.5 h-11 text-base"
           />
         </div>
-        <div>
+        <div className="pt-1">
           <Button
             type="submit"
             className="h-11 w-full bg-emerald-500 text-base text-white hover:bg-emerald-600"
+            disabled={loading}
           >
-            Đăng ký
+            {loading ? "Đang đăng ký..." : "Đăng ký"}
           </Button>
         </div>
       </form>
-      <p className="mt-2 text-center text-sm text-gray-600">
+      <p className="mt-6 text-center text-sm text-slate-600 dark:text-muted-foreground">
         Bạn đã có tài khoản?{" "}
         <Link
           to="/sign-in"
-          className="font-medium text-green-600 hover:text-green-500"
+          className="font-semibold text-emerald-700 hover:text-emerald-600 dark:text-emerald-300"
         >
           Đăng nhập
         </Link>

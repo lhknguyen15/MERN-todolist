@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import { CloudUpload, Plus } from "lucide-react";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import axiosClient from "../../apis/axiosClient";
 import {
   clearGuestTodos,
@@ -17,6 +18,9 @@ import { logout, setUser } from "../../redux/slices/authSlice";
 import { RootState } from "../../redux/store";
 import { ApiTodo, GuestTodo, mapApiTodo, Todo, TodoPriority } from "../../types/todo";
 import NavBar from "./NavBar";
+import DashboardLayout from "../Dashboard/DashboardLayout";
+import DashboardOverview from "../Dashboard/DashboardOverview";
+import AccountPanel from "../Dashboard/AccountPanel";
 
 interface User {
   id: string;
@@ -48,6 +52,10 @@ const isUnauthorized = (error: unknown): boolean =>
 
 const Home = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const isDashboard = location.pathname.startsWith("/dashboard");
   const user = useSelector((state: RootState) => state.auth.user);
   const [mode, setMode] = useState<DataMode>("guest");
   const [todos, setTodos] = useState<Todo[]>(() => readGuestTodos().map(toGuestView));
@@ -114,19 +122,23 @@ const Home = () => {
     setConnectionMessage(null);
 
     let currentUser: User;
-    try {
-      const response = await axiosClient.get<User>("/auth/me");
-      currentUser = response.data;
-    } catch (error) {
-      dispatch(logout());
-      setMode("guest");
-      setTodos(readGuestTodos().map(toGuestView));
-      if (!isUnauthorized(error)) {
-        setConnectionMessage(
-          "Không kết nối được tài khoản lúc này. Todo khách vẫn được lưu trên thiết bị."
-        );
+    if (user) {
+      currentUser = user;
+    } else {
+      try {
+        const response = await axiosClient.get<User>("/auth/me");
+        currentUser = response.data;
+      } catch (error) {
+        dispatch(logout());
+        setMode("guest");
+        setTodos(readGuestTodos().map(toGuestView));
+        if (!isUnauthorized(error)) {
+          setConnectionMessage(
+            "Không kết nối được tài khoản lúc này. Todo khách vẫn được lưu trên thiết bị."
+          );
+        }
+        return;
       }
-      return;
     }
 
     dispatch(setUser(currentUser));
@@ -269,6 +281,7 @@ const Home = () => {
       updateTodos(readGuestTodos().map(toGuestView));
       setConnectionMessage(null);
       toast.success("Đã đăng xuất. Todo trong tài khoản vẫn được lưu trên MongoDB.");
+      navigate("/", { replace: true });
     } catch (error) {
       console.error("Đăng xuất thất bại:", error);
       toast.error("Đăng xuất chưa thành công. Vui lòng thử lại.");
@@ -277,19 +290,25 @@ const Home = () => {
 
   const pendingCount = todos.filter((todo) => !todo.completed).length;
   const completedCount = todos.length - pendingCount;
+  const requestedStatus = searchParams.get("status");
+  const selectedTaskFilter: ViewFilter =
+    requestedStatus === "active" || requestedStatus === "completed" ? requestedStatus : "all";
+  const isHighPriorityFilter = isDashboard && searchParams.get("priority") === "high";
   const filteredTodos = useMemo(
     () =>
       todos.filter((todo) => {
         const matchesSearch = todo.title
           .toLocaleLowerCase("vi")
           .includes(searchTerm.trim().toLocaleLowerCase("vi"));
+        const activeFilter = isDashboard ? selectedTaskFilter : filter;
+        const matchesPriority = !isHighPriorityFilter || todo.priority === "high";
         const matchesFilter =
-          filter === "all" ||
-          (filter === "active" && !todo.completed) ||
-          (filter === "completed" && todo.completed);
-        return matchesSearch && matchesFilter;
+          activeFilter === "all" ||
+          (activeFilter === "active" && !todo.completed) ||
+          (activeFilter === "completed" && todo.completed);
+        return matchesSearch && matchesFilter && matchesPriority;
       }),
-    [filter, searchTerm, todos]
+    [filter, isDashboard, isHighPriorityFilter, searchTerm, selectedTaskFilter, todos]
   );
 
   const filterOptions: { id: ViewFilter; label: string; count: number }[] = [
@@ -302,6 +321,124 @@ const Home = () => {
     { id: "medium", label: "Trung bình", color: "bg-amber-500", count: todos.filter((todo) => todo.priority === "medium").length },
     { id: "low", label: "Thấp", color: "bg-slate-400", count: todos.filter((todo) => todo.priority === "low").length },
   ];
+
+  const isOverviewPage = location.pathname === "/dashboard" || location.pathname === "/dashboard/";
+  const isAccountPage = location.pathname === "/dashboard/account";
+  const handleSelectTaskFilter = (nextFilter: ViewFilter) => {
+    if (!isDashboard) {
+      setFilter(nextFilter);
+      return;
+    }
+    const nextParams = new URLSearchParams(searchParams);
+    if (nextFilter === "all") nextParams.delete("status");
+    else nextParams.set("status", nextFilter);
+    setSearchParams(nextParams);
+  };
+  const toggleHighPriorityFilter = () => {
+    const nextParams = new URLSearchParams(searchParams);
+    if (isHighPriorityFilter) nextParams.delete("priority");
+    else nextParams.set("priority", "high");
+    setSearchParams(nextParams);
+  };
+
+  if (isDashboard) {
+    return (
+      <>
+        <DashboardLayout
+          username={user?.username ?? "Tài khoản"}
+          searchTerm={searchTerm}
+          isDark={isDark}
+          onSearch={setSearchTerm}
+          onToggleTheme={() => setIsDark((dark) => !dark)}
+          onAddTodo={() => setIsAddTodoOpen(true)}
+          addTodoDisabled={mode !== "account"}
+          onLogout={handleLogout}
+        >
+          {isOverviewPage ? (
+            <>
+              {connectionMessage && (
+                <p role="status" className="mb-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
+                  {connectionMessage}
+                </p>
+              )}
+              <DashboardOverview
+                todos={todos}
+                loading={loading || mode !== "account"}
+                onToggleComplete={handleToggleComplete}
+              />
+            </>
+          ) : isAccountPage ? (
+            user ? (
+              <AccountPanel username={user.username} email={user.email} onLogout={handleLogout} />
+            ) : (
+              <p role="status" className="text-sm text-muted-foreground">Đang tải thông tin tài khoản...</p>
+            )
+          ) : (
+            <div className="space-y-6">
+              <section className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                  <h2 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-foreground">Công việc của tôi</h2>
+                  <p className="mt-1 text-sm text-slate-500 dark:text-muted-foreground">Theo dõi, cập nhật và sắp xếp công việc theo mức độ ưu tiên.</p>
+                </div>
+              </section>
+              {connectionMessage && (
+                <p role="status" className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
+                  {connectionMessage}
+                </p>
+              )}
+              {syncError && (
+                <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
+                  <span>Todo trên thiết bị chưa đồng bộ được vào tài khoản.</span>
+                  <Button onClick={handleSyncGuestTodos} disabled={syncing} variant="outline" size="sm">
+                    <CloudUpload size={16} /> {syncing ? "Đang đồng bộ..." : "Thử đồng bộ lại"}
+                  </Button>
+                </div>
+              )}
+              <section aria-label="Danh sách todo">
+                <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex flex-wrap items-center gap-2" aria-label="Thống kê mức độ ưu tiên">
+                    {priorityOptions.map((option) => (
+                      <span key={option.id} className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-sm text-slate-700 dark:border-border dark:bg-card dark:text-card-foreground">
+                        <span className={`size-2 rounded-full ${option.color}`} aria-hidden="true" />
+                        {option.label}: <strong>{option.count}</strong>
+                      </span>
+                    ))}
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Button
+                      type="button"
+                      variant={isHighPriorityFilter ? "default" : "outline"}
+                      aria-pressed={isHighPriorityFilter}
+                      onClick={toggleHighPriorityFilter}
+                      className={isHighPriorityFilter ? "bg-red-600 text-white hover:bg-red-700" : ""}
+                    >
+                      Ưu tiên cao
+                    </Button>
+                    <TodoFilterMenu
+                      options={filterOptions}
+                      selectedId={selectedTaskFilter}
+                      onSelect={handleSelectTaskFilter}
+                    />
+                  </div>
+                </div>
+                <TodoList
+                  todos={filteredTodos}
+                  loading={loading}
+                  hasTodos={todos.length > 0}
+                  searchTerm={searchTerm}
+                  resetKey={`${selectedTaskFilter}:${isHighPriorityFilter}:${searchTerm}`}
+                  onEdit={handleEditTodo}
+                  onDelete={handleDeleteTodo}
+                  onToggleComplete={handleToggleComplete}
+                />
+              </section>
+            </div>
+          )}
+        </DashboardLayout>
+        <AddTodoModal isOpen={isAddTodoOpen} setIsOpen={setIsAddTodoOpen} onAdd={handleAddTodo} />
+      </>
+    );
+  }
 
   return (
     <div className="flex min-h-screen flex-col bg-[#f6faf7] text-slate-800 dark:bg-background dark:text-foreground">
