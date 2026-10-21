@@ -1,5 +1,6 @@
 import {
   LayoutDashboard,
+  FolderOpen,
   ListTodo,
   LogOut,
   Moon,
@@ -28,6 +29,7 @@ interface DashboardLayoutProps {
 const navItems = [
   { to: "/dashboard", label: "Tổng quan", icon: LayoutDashboard, end: true },
   { to: "/dashboard/tasks", label: "Công việc", icon: ListTodo, end: false },
+  { to: "/dashboard/categories", label: "Danh mục", icon: FolderOpen, end: false },
   { to: "/dashboard/account", label: "Tài khoản", icon: UserRound, end: false },
 ];
 

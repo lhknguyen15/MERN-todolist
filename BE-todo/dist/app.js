@@ -17,6 +17,7 @@ const mongoose_1 = __importDefault(require("mongoose"));
 const cookie_parser_1 = __importDefault(require("cookie-parser"));
 const authRoutes_1 = __importDefault(require("./routes/authRoutes"));
 const todoRoutes_1 = __importDefault(require("./routes/todoRoutes"));
+const categoryRoutes_1 = __importDefault(require("./routes/categoryRoutes"));
 const cors_1 = __importDefault(require("cors"));
 const env_1 = require("./config/env");
 const app = (0, express_1.default)();
@@ -28,6 +29,7 @@ app.use(express_1.default.json());
 app.use((0, cookie_parser_1.default)());
 app.use("/api/auth", authRoutes_1.default);
 app.use("/api/todos", todoRoutes_1.default);
+app.use("/api/categories", categoryRoutes_1.default);
 const PORT = process.env.PORT || 5000;
 const startServer = () => __awaiter(void 0, void 0, void 0, function* () {
     try {

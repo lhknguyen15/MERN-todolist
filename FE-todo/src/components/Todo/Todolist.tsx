@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import TodoCard from "./TodoCard";
 import { Todo } from "../../types/todo";
 import { TodoPriority } from "../../types/todo";
+import { Category } from "../../types/category";
 import { Card, CardContent } from "../ui/card";
 import {
   Pagination,
@@ -20,7 +21,11 @@ interface TodoListProps {
   hasTodos: boolean;
   searchTerm: string;
   resetKey: string;
-  onEdit: (id: string, newTitle: string, priority: TodoPriority) => Promise<void>;
+  categories?: Category[];
+  guestCategories?: Category[];
+  canAssignCategory?: boolean;
+  canAssignGuestCategory?: boolean;
+  onEdit: (id: string, newTitle: string, description: string, priority: TodoPriority, startDate: string | null, dueDate: string | null, categoryId: string | null) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
   onToggleComplete: (id: string, completed: boolean) => Promise<void>;
 }
@@ -31,6 +36,10 @@ const TodoList: React.FC<TodoListProps> = ({
   hasTodos,
   searchTerm,
   resetKey,
+  categories = [],
+  guestCategories = [],
+  canAssignCategory = false,
+  canAssignGuestCategory = false,
   onEdit,
   onDelete,
   onToggleComplete,
@@ -97,19 +106,28 @@ const TodoList: React.FC<TodoListProps> = ({
   return (
     <>
       <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3" aria-label="Danh sách việc cần làm">
-      {pageTodos.map((todo) => (
+      {pageTodos.map((todo) => {
+        const todoCategories = todo.source === "guest" ? guestCategories : categories;
+        return (
         <li key={todo.id}>
           <TodoCard
             id={todo.id}
             title={todo.title}
+            description={todo.description}
             completed={todo.completed}
             priority={todo.priority}
+            startDate={todo.startDate}
+            dueDate={todo.dueDate}
+            category={todoCategories.find((category) => category.id === todo.categoryId)}
+            categories={todoCategories}
+            canAssignCategory={todo.source === "guest" ? canAssignGuestCategory : canAssignCategory}
             onEdit={onEdit}
             onDelete={onDelete}
             onToggleComplete={onToggleComplete}
           />
         </li>
-      ))}
+        );
+      })}
       </ul>
       {todos.length > pageSize && (
         <div className="mt-6 flex flex-col gap-3 rounded-xl border border-slate-200 bg-card px-4 py-3 text-card-foreground sm:flex-row sm:items-center sm:justify-between dark:border-border">

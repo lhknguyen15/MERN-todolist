@@ -1,17 +1,25 @@
 import React, { useState } from "react";
-import { Check, Pencil, Trash2 } from "lucide-react";
+import { CalendarDays, Check, Pencil, Trash2 } from "lucide-react";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardFooter } from "../ui/card";
 import UpdateTodoModal from "./UpdateTodoModal";
 import DeleteTodoModal from "./DeleteTodoModal";
 import { TodoPriority } from "../../types/todo";
+import { formatDateOnly, getLocalDateOnly } from "../../utils/dateOnly";
+import { Category, categoryColors } from "../../types/category";
 
 interface TodoCardProps {
   id: string;
   title: string;
+  description: string;
   completed: boolean;
   priority: TodoPriority;
-  onEdit: (id: string, newTitle: string, priority: TodoPriority) => Promise<void>;
+  startDate: string | null;
+  dueDate: string | null;
+  category?: Category;
+  categories?: Category[];
+  canAssignCategory?: boolean;
+  onEdit: (id: string, newTitle: string, description: string, priority: TodoPriority, startDate: string | null, dueDate: string | null, categoryId: string | null) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
   onToggleComplete: (id: string, completed: boolean) => Promise<void>;
 }
@@ -19,8 +27,14 @@ interface TodoCardProps {
 const TodoCard: React.FC<TodoCardProps> = ({
   id,
   title,
+  description,
   completed,
   priority,
+  startDate,
+  dueDate,
+  category,
+  categories = [],
+  canAssignCategory = false,
   onEdit,
   onDelete,
   onToggleComplete,
@@ -42,6 +56,7 @@ const TodoCard: React.FC<TodoCardProps> = ({
     medium: "Ưu tiên trung bình",
     low: "Ưu tiên thấp",
   };
+  const isOverdue = Boolean(dueDate && dueDate < getLocalDateOnly() && !completed);
 
   return (
     <Card className={`group h-full min-h-48 gap-0 p-0 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${priorityCardStyles[priority]}`}>
@@ -54,6 +69,11 @@ const TodoCard: React.FC<TodoCardProps> = ({
           <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${priorityStyles[priority]}`}>
             {priorityLabels[priority]}
           </span>
+          {category && (
+            <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${categoryColors.find((item) => item.id === category.color)?.badge ?? "bg-slate-100 text-slate-700"}`}>
+              {category.name}
+            </span>
+          )}
         </div>
         <Button
           type="button"
@@ -69,12 +89,32 @@ const TodoCard: React.FC<TodoCardProps> = ({
         </Button>
       </div>
 
-      <h2 className={`flex-1 break-words text-base font-semibold leading-6 ${completed ? "text-slate-400 line-through dark:text-muted-foreground" : "text-slate-800 dark:text-card-foreground"}`}>
+      <h2 className={`line-clamp-3 flex-1 break-words [overflow-wrap:anywhere] text-lg font-bold leading-6 ${completed ? "text-slate-400 line-through dark:text-muted-foreground" : "text-slate-800 dark:text-card-foreground"}`}>
         {title}
       </h2>
+      {description && (
+        <p className="mt-3 line-clamp-2 whitespace-pre-wrap break-words text-sm leading-5 text-slate-600 dark:text-muted-foreground">
+          {description}
+        </p>
+      )}
       </CardContent>
 
-      <CardFooter className="justify-end gap-1 border-t border-slate-100 px-5 py-3 dark:border-border">
+      <CardFooter className="flex items-center justify-between gap-2 border-t border-slate-100 px-4 py-3 dark:border-border sm:px-5">
+        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+          {startDate && (
+            <span className="inline-flex items-center gap-1.5 text-slate-500 dark:text-muted-foreground">
+              <CalendarDays size={14} aria-hidden="true" />
+              <span>Bắt đầu {formatDateOnly(startDate)}</span>
+            </span>
+          )}
+          {dueDate && (
+            <span className={isOverdue ? "inline-flex items-center gap-1.5 font-semibold text-red-700 dark:text-red-300" : "inline-flex items-center gap-1.5 text-slate-500 dark:text-muted-foreground"}>
+              <CalendarDays size={14} aria-hidden="true" />
+              <span>{isOverdue ? "Quá hạn" : "Hạn kết thúc"} {formatDateOnly(dueDate)}</span>
+            </span>
+          )}
+        </div>
+        <div className="ml-auto flex shrink-0 items-center gap-1">
         <Button
           onClick={() => setIsUpdateOpen(true)}
           aria-label={`Sửa: ${title}`}
@@ -93,6 +133,7 @@ const TodoCard: React.FC<TodoCardProps> = ({
         >
           <Trash2 size={18} />
         </Button>
+        </div>
       </CardFooter>
 
       {/* Dialog cập nhật Todo */}
@@ -100,8 +141,16 @@ const TodoCard: React.FC<TodoCardProps> = ({
         isOpen={isUpdateOpen}
         onClose={() => setIsUpdateOpen(false)}
         initialTitle={title}
+        initialDescription={description}
         initialPriority={priority}
-        onUpdate={(newTitle, newPriority) => onEdit(id, newTitle, newPriority)}
+        initialStartDate={startDate}
+        initialDueDate={dueDate}
+        initialCategoryId={category?.id ?? null}
+        categories={categories}
+        canAssignCategory={canAssignCategory}
+        onUpdate={(newTitle, newDescription, newPriority, newStartDate, newDueDate, newCategoryId) =>
+          onEdit(id, newTitle, newDescription, newPriority, newStartDate, newDueDate, newCategoryId)
+        }
       />
 
       {/* Dialog xác nhận xóa */}
@@ -110,6 +159,7 @@ const TodoCard: React.FC<TodoCardProps> = ({
         onClose={() => setIsDeleteOpen(false)}
         onConfirm={() => onDelete(id)}
       />
+
     </Card>
   );
 };

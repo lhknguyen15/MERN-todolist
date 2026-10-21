@@ -1,4 +1,4 @@
-import { LogOut, Moon, Search, Sun } from "lucide-react";
+import { LayoutDashboard, LogOut, Moon, Search, Sun } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
@@ -43,6 +43,12 @@ const NavBar: React.FC<NavBarProps> = ({ user, onLogout, onSearch, isDark, onTog
         </Button>
         {user ? (
           <>
+            <Button asChild variant="outline" size="icon" className="sm:hidden">
+              <Link to="/dashboard" aria-label="Mở dashboard"><LayoutDashboard size={17} /></Link>
+            </Button>
+            <Button asChild variant="outline" className="hidden sm:inline-flex">
+              <Link to="/dashboard"><LayoutDashboard size={16} /> Dashboard</Link>
+            </Button>
             <span className="hidden max-w-40 truncate text-base font-medium text-slate-700 dark:text-muted-foreground md:inline">
               {user.username}
             </span>

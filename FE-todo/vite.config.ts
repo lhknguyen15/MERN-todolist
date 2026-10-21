@@ -17,9 +17,8 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": {
-        target: "https://mern-todolist-s128.onrender.com",
+        target: "http://localhost:3001",
         changeOrigin: true,
-        secure: true,
       },
     },
   },

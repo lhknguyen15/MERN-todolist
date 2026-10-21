@@ -2,19 +2,19 @@ import { Check, ChevronDown, ListFilter } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "../ui/button";
 
-export interface TodoFilterOption {
-  id: "all" | "active" | "completed";
+export interface TodoFilterOption<TId extends string = "all" | "active" | "completed"> {
+  id: TId;
   label: string;
   count: number;
 }
 
-interface TodoFilterMenuProps {
-  options: TodoFilterOption[];
-  selectedId: TodoFilterOption["id"];
-  onSelect: (id: TodoFilterOption["id"]) => void;
+interface TodoFilterMenuProps<TId extends string> {
+  options: TodoFilterOption<TId>[];
+  selectedId: TId;
+  onSelect: (id: TId) => void;
 }
 
-const TodoFilterMenu: React.FC<TodoFilterMenuProps> = ({ options, selectedId, onSelect }) => {
+const TodoFilterMenu = <TId extends string>({ options, selectedId, onSelect }: TodoFilterMenuProps<TId>) => {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const selectedOption = options.find((option) => option.id === selectedId) ?? options[0];

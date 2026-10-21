@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import cookieParser from "cookie-parser";
 import authRoutes from "./routes/authRoutes";
 import todoRoutes from "./routes/todoRoutes";
+import categoryRoutes from "./routes/categoryRoutes";
 import cors from "cors";
 import { CORS_ORIGINS, MONGODB_URI } from "./config/env";
 
@@ -17,6 +18,7 @@ app.use(express.json());
 app.use(cookieParser());
 app.use("/api/auth", authRoutes);
 app.use("/api/todos", todoRoutes);
+app.use("/api/categories", categoryRoutes);
 
 const PORT = process.env.PORT || 5000;
 
